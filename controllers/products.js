@@ -9,7 +9,14 @@ const getAllProductsStatic = async (req, res) => {
 }
 
 const getAllProducts = async (req, res) => {
-    const products = await Product.find(req.query) // ?featured=true → { featured: 'true' }, Mongoose приводить тип за схемою
+    const { featured } = req.query // беремо лише відомі параметри — решта (page тощо) ігнорується
+    const queryObj = {} // filter збираємо вручну, а не передаємо req.query як є
+
+    if (featured) {
+        queryObj.featured = featured === 'true' // рядок з URL → boolean
+    }
+
+    const products = await Product.find(queryObj) // порожній queryObj = всі продукти
     res.status(200).json({ products, nbHits: products.length })
 }
 
