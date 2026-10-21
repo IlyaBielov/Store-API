@@ -1,5 +1,5 @@
-require('dotenv').config(); // Це потрібно для того щоб...
-require('express-async-errors');
+require('dotenv').config(); // Завантажує змінні з .env у process.env (MONGO_URI, PORT)
+require('express-async-errors'); // async-помилки самі йдуть в errorHandler, без try/catch
 
 const express = require('express');
 const app = express();
@@ -11,7 +11,7 @@ const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 
 // middleware
-app.use(express.json());
+app.use(express.json()); // парсить JSON-тіло запиту в req.body
 
 // routes
 app.get('/', (req, res) => {
@@ -23,9 +23,9 @@ app.get('/', (req, res) => {
 
 
 // products route
-app.use('/api/v1/products', productsRouter);
+app.use('/api/v1/products', productsRouter); // усі шляхи router'а з цим префіксом
 
-// errors middleware
+// errors middleware — строго після роутів: спрацьовують, коли ніхто не відповів
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
@@ -33,7 +33,7 @@ const port = process.env.PORT || 3000;
 
 const start = async () => {
     try {
-        await connectDB(process.env.MONGO_URI);
+        await connectDB(process.env.MONGO_URI); // без БД сервер не стартує
         console.log('Connected to the database...')
 
         app.listen(port, () => console.log(`Server is listening on port ${port}...`));

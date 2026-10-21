@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'product name must be provided']
+        required: [true, 'product name must be provided'] // [умова, текст помилки]
     },
     price: {
         type: Number,
@@ -19,15 +19,17 @@ const productSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now,
+        default: Date.now, // функція, не Date.now() — час береться на кожен документ
     },
     company: {
         type: String,
-        enum: {
+        enum: { // дозволені лише ці значення, інакше ValidationError
             values: ['ikea', 'liddy', 'caressa', 'marcos'],
-            message: '{VALUE} is not supported',
+            message: '{VALUE} is not supported', // {VALUE} Mongoose підставить сам
         },
     },
 })
 
-module.exports = mongoose.model('Product', productSchema);
+// JSDoc-тип для WebStorm: поля моделі виводяться зі схеми, а не з TS-перевантажень навмання
+/** @type {mongoose.Model<mongoose.InferSchemaType<typeof productSchema>>} */
+module.exports = mongoose.model('Product', productSchema); // колекція в БД: 'products'
