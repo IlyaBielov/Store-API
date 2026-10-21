@@ -2,12 +2,12 @@ const Product = require("../models/product");
 
 // async через await Product.find(); помилки ловить express-async-errors
 const getAllProductsStatic = async (req, res) => {
-    const products = await Product.find({}).sort("-name price"); // "-" = спадання; price — тай-брейк при однаковому name
+    const products = await Product.find({}).select('name price'); // лише ці поля (+ _id завжди)
     res.status(200).json({ products, nbHits: products.length }) // find завжди дає масив, навіть []
 }
 
 const getAllProducts = async (req, res) => {
-    const { featured, company, name, sort } = req.query // беремо лише відомі параметри — решта (page тощо) ігнорується
+    const { featured, company, name, sort, fields } = req.query // беремо лише відомі параметри — решта (page тощо) ігнорується
     const queryObj = {} // filter збираємо вручну, а не передаємо req.query як є
 
     if (featured) {
@@ -29,6 +29,12 @@ const getAllProducts = async (req, res) => {
     } else {
         result = result.sort('createdAt') // порядок за замовчуванням, коли sort не передали
     }
+
+    if (fields) {
+        const fieldsList = fields.split(',').join(' ') // той самий формат, що й у sort
+        result = result.select(fieldsList) // projection: БД віддає лише ці поля, не міняє фільтр
+    }
+
     const products = await result // лише тут запит іде в MongoDB
     res.status(200).json({ products, nbHits: products.length })
 }
