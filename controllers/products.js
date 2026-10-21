@@ -2,16 +2,12 @@ const Product = require("../models/product");
 
 // async через await Product.find(); помилки ловить express-async-errors
 const getAllProductsStatic = async (req, res) => {
-    const search = 'aaa';
-
-    const products = await Product.find({ // filter: назва містить search, будь-який регістр
-        name: { $regex:search, $options: 'i' }, // $regex — підрядок, а не точний збіг; 'i' — ігнор регістру
-    })
+    const products = await Product.find({}).sort("-name price"); // "-" = спадання; price — тай-брейк при однаковому name
     res.status(200).json({ products, nbHits: products.length }) // find завжди дає масив, навіть []
 }
 
 const getAllProducts = async (req, res) => {
-    const { featured, company, name } = req.query // беремо лише відомі параметри — решта (page тощо) ігнорується
+    const { featured, company, name, sort } = req.query // беремо лише відомі параметри — решта (page тощо) ігнорується
     const queryObj = {} // filter збираємо вручну, а не передаємо req.query як є
 
     if (featured) {
@@ -26,7 +22,14 @@ const getAllProducts = async (req, res) => {
         queryObj.name = { $regex: name, $options: 'i' } // підрядок без регістру: 'albany' знайде 'Albany Sectional'
     }
 
-    const products = await Product.find(queryObj) // порожній queryObj = всі продукти
+    let result = Product.find(queryObj) // без await: це Query, до нього ще чіпляємо .sort()
+    if (sort) {
+        const sortList = sort.split(',').join(' ') // URL: -name,price → Mongoose: '-name price'
+        result = result.sort(sortList)
+    } else {
+        result = result.sort('createdAt') // порядок за замовчуванням, коли sort не передали
+    }
+    const products = await result // лише тут запит іде в MongoDB
     res.status(200).json({ products, nbHits: products.length })
 }
 
